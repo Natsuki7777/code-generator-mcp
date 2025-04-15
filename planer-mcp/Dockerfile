@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir uv && \
 
 
 # Copy the application code
-COPY code_structure_server.py .
+COPY ./src ./src
 
 # Set the entrypoint
-ENTRYPOINT ["python", "code_structure_server.py"]
+ENTRYPOINT ["python", "src/server.py"]

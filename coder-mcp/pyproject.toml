@@ -1,7 +1,9 @@
 [project]
-name = "file-editor-mcp-server"
+name = "coder-mcp"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "mcp>=1.6.0",
+]
