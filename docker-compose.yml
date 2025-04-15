@@ -1,0 +1,17 @@
+services:
+  code-structure-reader:
+    container_name: code-generator-mcp-code-structure-reader
+    build: ./code-structure-mcp-server
+    volumes:
+      - ${CODE_PATH}:/${PROJECT_NAME}:ro # Mount the code directory as read-only
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+  file-reader-server:
+    container_name: code-generator-mcp-file-reader-server
+    build: ./file-reader-mcp-server
+    volumes:
+      - ${CODE_PATH}:/${PROJECT_NAME}:ro # Mount the code directory as read-only
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
