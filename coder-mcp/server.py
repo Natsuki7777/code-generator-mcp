@@ -16,7 +16,7 @@ import os
 import shutil
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP 
 import uvicorn
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "file-editor-mcp-server")

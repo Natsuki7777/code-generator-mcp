@@ -4,11 +4,9 @@ from typing import Dict, List
 import uvicorn
 
 from read_file import read_single_file_contents
-from ignore import load_gitignore
-from tree import get_tree
+from tree_dir import get_tree_structure, load_base_gitignore
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "Code Planer MCP Server")
-
 
 # Initialize the MCP server
 mcp = FastMCP(
@@ -17,63 +15,49 @@ mcp = FastMCP(
 )
 
 
-@mcp.tool()
-def read_file(file_path: str) -> str:
-    """
-    Read the contents of a single file.
-
-    Args:
-        file_path: Path to the file to read
-
-    Returns:
-        The contents of the file as text
-    """
-    return read_single_file_contents(file_path)
+# Add file contents as a resource with template
+@mcp.resource("file://{path}")
+def get_file_content(path: str) -> str:
+    """Get the contents of a file"""
+    content = read_single_file_contents(path)
+    print(f"file://{path} -> {content}")
+    return content
 
 
-@mcp.tool()
-def read_files(file_paths: List[str]) -> Dict[str, str]:
-    """
-    Read the contents of multiple files.
-
-    Args:
-        file_paths: List of paths to files to read
-
-    Returns:
-        A dictionary mapping file paths to their contents
-    """
-    result = {}
-    for file_path in file_paths:
-        result[file_path] = read_single_file_contents(file_path)
-    return result
+@mcp.resource(f"file://{PROJECT_NAME}/README.md")
+def get_project_readme() -> str:
+    """Get README of the project"""
+    # 絶対パスに変換
+    content = read_single_file_contents(f"{PROJECT_NAME}/README.md")
+    print(f"file://{PROJECT_NAME}/README.md -> {content}")
+    return content
 
 
 @mcp.tool()
-def directory_structure(directory: str, max_depth: int = None, ignore_gitignore: bool = False) -> List[str]:
+def directory_structure(directory: str, max_depth: int = None, ignore_gitignore: bool = False) -> str:
     """
     Get the directory structure as a list of strings.
-
     Args:
-        directory: Path to the directory
-        max_depth: Maximum depth of the directory tree
+        directory: The directory path
+        max_depth: The maximum depth to traverse
         ignore_gitignore: Whether to ignore .gitignore files
     Returns:
-        A list of strings representing the directory structure
+        A string representation of the directory structure
     """
-    path = os.path.abspath(directory)
-    if not os.path.exists(path):
-        return f"Error: Directory '{path}' does not exist."
-
-    gitignore_dict = None if not ignore_gitignore else load_gitignore(path)
-
-    # ディレクトリ名と結果を文字列リストとして取得
-    result = [f"📁 {os.path.basename(path)}"]
-
-    # ツリーを生成
-    tree = get_tree(path, "", gitignore_dict, max_depth=max_depth)
-    result.extend(tree)
-
-    return result
+    target_path = os.path.join("/", directory)
+    base_path = os.path.join("/", PROJECT_NAME)
+    # Load .gitignore files
+    base_gitignore = load_base_gitignore(base_path, target_path)
+    # Get the directory structure
+    tree_structure = get_tree_structure(
+        target_dir=target_path,
+        current_depth=0,
+        gitignore_parsers=base_gitignore,
+        max_depth=max_depth
+    )
+    # Convert the list to a string
+    tree_structure_str = "\n".join(tree_structure)
+    return tree_structure_str
 
 
 if __name__ == "__main__":

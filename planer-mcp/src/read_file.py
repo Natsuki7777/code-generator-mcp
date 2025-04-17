@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 
 def read_single_file_contents(file_path: str) -> str:
@@ -11,17 +12,17 @@ def read_single_file_contents(file_path: str) -> str:
     Returns:
         The contents of the file as text
     """
-    # 絶対パスに変換
-    file_path = os.path.abspath(file_path)
-    if not os.path.exists(file_path):
-        return f"Error: File '{file_path}' does not exist."
+    # 絶対パスが渡されてくることを想定
+    path = os.path.join("/", file_path)
+    if not os.path.exists(path):
+        return f"Error: File '{path}' does not exist."
 
-    if not os.path.isfile(file_path):
-        return f"Error: Path '{file_path}' is not a file."
+    if not os.path.isfile(path):
+        return f"Error: Path '{path}' is not a file."
 
     # Log information if context is available
     try:
-        with open(file_path, 'r', encoding='utf-8') as file:
+        with open(path, 'r', encoding='utf-8') as file:
             content = file.read()
     except Exception as e:
         return f"Error reading file: {str(e)}"

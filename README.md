@@ -15,15 +15,19 @@ docker-compose up -d
 ```
 
 ## cloude desktop での使用
+macOSでは
+```
+~/Library/Application\ Support/Claude/claude_desktop_config.json
+```
 
 ```json
 {
   "mcpServers": {
-    "Code structure": {
+    "Planer MCP": {
       "command": "/Users/natsuki/.volta/bin/npx",
       "args": ["mcp-remote", "http://localhost:8081/sse"]
     },
-    "File Reader": {
+    "Coder MCP": {
       "command": "/Users/natsuki/.volta/bin/npx",
       "args": ["mcp-remote", "http://localhost:8080/sse"]
     }

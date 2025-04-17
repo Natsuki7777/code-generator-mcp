@@ -77,6 +77,12 @@ wheels = [
 ]
 
 [[package]]
+name = "gitignore-parser"
+version = "0.1.12"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/a8/faf07759672973362e3f1f9742281a90aec7846e8a4043c4df5652990054/gitignore_parser-0.1.12.tar.gz", hash = "sha256:78b22243adc0f02102c56c5e8c9a1d9121394142ca6143a90daa7f8d7a07a17e", size = 5407 }
+
+[[package]]
 name = "h11"
 version = "0.14.0"
 source = { registry = "https://pypi.org/simple" }
@@ -155,6 +161,7 @@ name = "planer-mcp"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "gitignore-parser" },
     { name = "mcp" },
     { name = "python-magic" },
     { name = "tiktoken" },
@@ -162,6 +169,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "gitignore-parser", specifier = ">=0.1.12" },
     { name = "mcp", specifier = ">=1.6.0" },
     { name = "python-magic", specifier = ">=0.4.27" },
     { name = "tiktoken", specifier = ">=0.9.0" },

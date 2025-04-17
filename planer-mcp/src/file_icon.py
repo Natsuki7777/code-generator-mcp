@@ -1,12 +1,13 @@
 import os
+from pathlib import Path
 import magic
 
 
-def get_file_icon(file_path: str) -> str:
+def get_file_icon(file_path: Path) -> str:
     """ファイルの拡張子やMIMEタイプに基づいてアイコンを返す"""
     try:
         # ファイル拡張子を取得
-        _, ext = os.path.splitext(file_path.lower())
+        ext = file_path.suffix.lower()
 
         # プログラミング言語
         if ext in ['.py']:

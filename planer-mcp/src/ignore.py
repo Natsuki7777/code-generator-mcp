@@ -1,155 +1,170 @@
 import os
-import fnmatch
-from typing import Dict, List
+import re
+from pathlib import Path
+from typing import List, Set, Optional, Pattern
 
 
-def load_gitignore(path: str) -> Dict[str, List[str]]:
-    """指定パスとその親ディレクトリすべてから.gitignoreファイルを読み込む
-
-    Returns:
-        dict: ディレクトリパスをキー、パターンのリストを値とする辞書
+class GitignoreParser:
     """
-    gitignore_dict = {}
-
-    # 絶対パスに変換
-    abs_path = os.path.abspath(path)
-
-    # パスとその親ディレクトリをすべて調べる
-    current_path = abs_path
-    while True:
-        gitignore_path = os.path.join(current_path, '.gitignore')
-        if os.path.isfile(gitignore_path):
-            patterns = []
-            with open(gitignore_path, 'r', encoding='utf-8', errors='ignore') as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith('#'):
-                        patterns.append(line)
-
-            # このディレクトリの.gitignoreパターンを追加
-            gitignore_dict[current_path] = patterns
-
-        # 親ディレクトリに移動（ルートに達したら終了）
-        parent_path = os.path.dirname(current_path)
-        if parent_path == current_path:  # ルートディレクトリに達した
-            break
-        current_path = parent_path
-
-    return gitignore_dict
-
-
-def should_ignore(path: str, gitignore_dict: Dict[str, List[str]]) -> bool:
-    """パスがgitignoreパターンに一致するかどうかをチェック
-
-    最も近いディレクトリの.gitignoreが優先される
+    .gitignoreファイルのパターンを解析し、ファイルやディレクトリが除外されるべきかを判断するクラス
     """
-    if not gitignore_dict:
-        return False
-
-    # パスを絶対パスに変換
-    abs_path = os.path.abspath(path)
-
-    # ファイルの親ディレクトリから始めて、すべての親ディレクトリを調べる
-    current_dir = os.path.dirname(
-        abs_path) if not os.path.isdir(abs_path) else abs_path
-
-    # 最も近いディレクトリから順に.gitignoreパターンをチェック
-    checked_dirs = []
-
-    while True:
-        checked_dirs.append(current_dir)
-
-        if current_dir in gitignore_dict:
-            patterns = gitignore_dict[current_dir]
-
-            # このディレクトリからの相対パスを取得
-            rel_path = os.path.relpath(abs_path, current_dir)
-            rel_path = rel_path.replace('\\', '/')
-
-            for pattern in patterns:
-                # コメントと空行をスキップ
-                if not pattern or pattern.startswith('#'):
-                    continue
-
-                # 否定パターン (! で始まる)
-                if pattern.startswith('!'):
-                    continue  # 簡略化のため否定パターンは無視
-
-                # ディレクトリのみのパターン (/ で終わる)
-                if pattern.endswith('/') and not os.path.isdir(abs_path):
-                    continue
-
-                # ディレクトリパターンの末尾のスラッシュを削除
-                if pattern.endswith('/'):
-                    pattern = pattern[:-1]
-
-                # スラッシュで始まるパターンを処理
-                if pattern.startswith('/'):
-                    pattern = pattern[1:]  # 先頭のスラッシュを削除
-                    if fnmatch.fnmatch(rel_path, pattern):
-                        return True
-                else:
-                    # 先頭のスラッシュがないパターンは、パスの任意の部分と一致
-                    path_parts = rel_path.split('/')
-                    for i in range(len(path_parts)):
-                        if fnmatch.fnmatch('/'.join(path_parts[i:]), pattern):
-                            return True
-
-        # 親ディレクトリに移動（ルートに達したら終了）
-        parent_dir = os.path.dirname(current_dir)
-        if parent_dir == current_dir:  # ルートディレクトリに達した
-            break
-        current_dir = parent_dir
-
-    # gitignore辞書にあるが、チェックされていない他のディレクトリもチェック
-    for dir_path, patterns in gitignore_dict.items():
-        if dir_path not in checked_dirs:
-            # このディレクトリにパスが含まれているかチェック
-            if abs_path.startswith(dir_path):
-                rel_path = os.path.relpath(abs_path, dir_path)
-                rel_path = rel_path.replace('\\', '/')
-
-                for pattern in patterns:
-                    # コメントと空行をスキップ
-                    if not pattern or pattern.startswith('#'):
-                        continue
-
-                    # 否定パターン (! で始まる)
-                    if pattern.startswith('!'):
-                        continue  # 簡略化のため否定パターンは無視
-
-                    # ディレクトリのみのパターン (/ で終わる)
-                    if pattern.endswith('/') and not os.path.isdir(abs_path):
-                        continue
-
-                    # ディレクトリパターンの末尾のスラッシュを削除
-                    if pattern.endswith('/'):
-                        pattern = pattern[:-1]
-
-                    # スラッシュで始まるパターンを処理
-                    if pattern.startswith('/'):
-                        pattern = pattern[1:]  # 先頭のスラッシュを削除
-                        if fnmatch.fnmatch(rel_path, pattern):
-                            return True
-                    else:
-                        # 先頭のスラッシュがないパターンは、パスの任意の部分と一致
-                        path_parts = rel_path.split('/')
-                        for i in range(len(path_parts)):
-                            if fnmatch.fnmatch('/'.join(path_parts[i:]), pattern):
-                                return True
-
-    return False
-
-
-if __name__ == "__main__":
-    # テスト用のパスを指定
-    test_path = "/path/to/test"  # Replace with your test path
-
-    # .gitignoreファイルを読み込む
-    gitignore_patterns = load_gitignore(test_path)
-
-    # パスが.gitignoreパターンに一致するかチェック
-    if should_ignore(test_path, gitignore_patterns):
-        print(f"{test_path} is ignored by .gitignore patterns.")
-    else:
-        print(f"{test_path} is not ignored by .gitignore patterns.")
+    
+    def __init__(self):
+        self.patterns: List[Pattern] = []
+        self.negated_patterns: List[Pattern] = []
+    
+    def parse_gitignore(self, gitignore_path: Path) -> None:
+        """
+        .gitignoreファイルを解析し、パターンをロードします
+        
+        Args:
+            gitignore_path: .gitignoreファイルのパス
+        """
+        if not gitignore_path.exists():
+            return
+        
+        with open(gitignore_path, 'r') as f:
+            lines = [line.rstrip() for line in f.readlines()]
+        
+        for line in lines:
+            # コメントと空行をスキップ
+            if not line or line.startswith('#'):
+                continue
+            
+            # ネゲーションパターン（!から始まる）を処理
+            negated = line.startswith('!')
+            if negated:
+                line = line[1:]
+            
+            # パターンを正規表現に変換
+            pattern = self._convert_pattern_to_regex(line)
+            
+            if negated:
+                self.negated_patterns.append(pattern)
+            else:
+                self.patterns.append(pattern)
+    
+    def _convert_pattern_to_regex(self, pattern: str) -> Pattern:
+        """
+        gitignoreパターンを正規表現に変換します
+        
+        Args:
+            pattern: gitignoreパターン
+            
+        Returns:
+            コンパイルされた正規表現パターン
+        """
+        # パターンをクリーンアップ
+        pattern = pattern.strip()
+        
+        # スラッシュで始まる場合はルートからの相対パス
+        starts_with_slash = pattern.startswith('/')
+        if starts_with_slash:
+            pattern = pattern[1:]
+        
+        # スラッシュで終わる場合はディレクトリのみを対象
+        ends_with_slash = pattern.endswith('/')
+        if ends_with_slash:
+            pattern = pattern[:-1]
+        
+        # 特殊文字をエスケープ
+        pattern = re.escape(pattern)
+        
+        # ワイルドカードを処理
+        pattern = pattern.replace('\\*\\*', '.*')  # ** は任意の文字列（0個以上）
+        pattern = pattern.replace('\\*', '[^/]*')  # * は / 以外の任意の文字列（0個以上）
+        pattern = pattern.replace('\\?', '[^/]')   # ? は / 以外の任意の1文字
+        
+        # 行頭・行末に調整
+        if starts_with_slash:
+            pattern = '^' + pattern
+        else:
+            pattern = '(^|/)' + pattern
+        
+        if ends_with_slash:
+            pattern = pattern + '(/.*)?$'
+        else:
+            pattern = pattern + '(/.*)?$'
+        
+        return re.compile(pattern)
+    
+    def is_ignored(self, path: str, is_dir: bool = False) -> bool:
+        """
+        指定されたパスが.gitignoreのルールに基づいて無視されるべきかを判定します
+        
+        Args:
+            path: チェックするパス（相対パス）
+            is_dir: パスがディレクトリかどうか
+            
+        Returns:
+            無視されるべきならTrue、そうでなければFalse
+        """
+        # パスの正規化
+        path = path.replace('\\', '/')
+        if is_dir and not path.endswith('/'):
+            path += '/'
+        
+        # 除外パターンと照合
+        ignored = False
+        for pattern in self.patterns:
+            if pattern.search(path):
+                ignored = True
+                break
+        
+        # 除外パターンで無視された場合でも、ネゲーションパターンがあれば確認
+        if ignored:
+            for pattern in self.negated_patterns:
+                if pattern.search(path):
+                    ignored = False
+                    break
+        
+        return ignored
+    
+    @staticmethod
+    def find_gitignore_files(directory: Path) -> List[Path]:
+        """
+        指定されたディレクトリとその親ディレクトリから.gitignoreファイルを検索します
+        
+        Args:
+            directory: 検索を開始するディレクトリ
+            
+        Returns:
+            見つかった.gitignoreファイルのリスト（親ディレクトリから順）
+        """
+        gitignore_files = []
+        current_dir = directory
+        
+        # ルートディレクトリに到達するまで上に移動
+        while current_dir.exists():
+            gitignore_path = current_dir / '.gitignore'
+            if gitignore_path.exists():
+                gitignore_files.append(gitignore_path)
+            
+            # 親ディレクトリがない場合（ルートに到達）
+            if current_dir.parent == current_dir:
+                break
+            
+            current_dir = current_dir.parent
+        
+        # 親から子の順に並べ替え
+        gitignore_files.reverse()
+        return gitignore_files
+    
+    @classmethod
+    def from_directory(cls, directory: Path) -> 'GitignoreParser':
+        """
+        指定されたディレクトリとその親ディレクトリの.gitignoreファイルをロードしたパーサーを作成します
+        
+        Args:
+            directory: .gitignoreファイルを検索するディレクトリ
+            
+        Returns:
+            初期化されたGitignoreParserインスタンス
+        """
+        parser = cls()
+        gitignore_files = cls.find_gitignore_files(directory)
+        
+        for gitignore_path in gitignore_files:
+            parser.parse_gitignore(gitignore_path)
+        
+        return parser
