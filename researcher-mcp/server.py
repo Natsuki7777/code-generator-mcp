@@ -113,10 +113,12 @@ class DuckDuckGoSearcher:
 
                 # Clean up DuckDuckGo redirect URLs
                 if link.startswith("//duckduckgo.com/l/?uddg="):
-                    link = urllib.parse.unquote(link.split("uddg=")[1].split("&")[0])
+                    link = urllib.parse.unquote(
+                        link.split("uddg=")[1].split("&")[0])
 
                 snippet_elem = result.select_one(".result__snippet")
-                snippet = snippet_elem.get_text(strip=True) if snippet_elem else ""
+                snippet = snippet_elem.get_text(
+                    strip=True) if snippet_elem else ""
 
                 results.append(
                     SearchResult(
@@ -179,7 +181,8 @@ class WebContentFetcher:
 
             # Clean up the text
             lines = (line.strip() for line in text.splitlines())
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            chunks = (phrase.strip()
+                      for line in lines for phrase in line.split("  "))
             text = " ".join(chunk for chunk in chunks if chunk)
 
             # Remove extra whitespace
@@ -214,12 +217,23 @@ fetcher = WebContentFetcher()
 @mcp.tool()
 async def search(query: str, ctx: Context, max_results: int = 10) -> str:
     """
-    Search DuckDuckGo and return formatted results.
+    Search the web using DuckDuckGo and return formatted results.
+
+    This tool enables searching for up-to-date information from the web using DuckDuckGo's search engine.
+    Results are formatted in a structured way suitable for analysis and referencing.
 
     Args:
-        query: The search query string
+        query: The search query string to look up on DuckDuckGo
         max_results: Maximum number of results to return (default: 10)
-        ctx: MCP context for logging
+        ctx: MCP context for logging (automatically provided)
+
+    Returns:
+        Formatted search results containing titles, URLs, and summaries of web pages
+
+    Examples:
+        - "latest developments in quantum computing"
+        - "weather in Tokyo today"
+        - "recipe for sourdough bread"
     """
     try:
         results = await searcher.search(query, ctx, max_results)
@@ -232,15 +246,28 @@ async def search(query: str, ctx: Context, max_results: int = 10) -> str:
 @mcp.tool()
 async def fetch_content(url: str, ctx: Context) -> str:
     """
-    Fetch and parse content from a webpage URL.
+    Fetch and parse content from a webpage URL to extract readable text.
+
+    This tool retrieves the contents of a specific webpage, processes it to extract
+    the main text content (removing navigation, ads, etc.), and returns a clean version
+    suitable for analysis. Use this after finding relevant URLs through the search tool.
 
     Args:
-        url: The webpage URL to fetch content from
-        ctx: MCP context for logging
+        url: The complete webpage URL to fetch content from (must include http/https)
+        ctx: MCP context for logging (automatically provided)
+
+    Returns:
+        The extracted and cleaned textual content from the webpage
+
+    Examples:
+        - "https://example.com/article/123"
+        - "https://en.wikipedia.org/wiki/Machine_learning"
+
+    Note: 
+        Some websites may block automated content retrieval or present CAPTCHAs,
+        which could result in incomplete or failed content extraction.
     """
     return await fetcher.fetch_and_parse(url, ctx)
-
-
 
 
 if __name__ == "__main__":
