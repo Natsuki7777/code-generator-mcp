@@ -1,7 +1,7 @@
 services:
-  planer-mcp:
-    container_name: planer-mcp
-    build: ./planer-mcp
+  planner-mcp:
+    container_name: planner-mcp
+    build: ./planner-mcp
     volumes:
       - ${CODE_PATH}:/${PROJECT_NAME}:ro # Mount the code directory as read-only
     restart: unless-stopped
@@ -9,7 +9,7 @@ services:
       - CODE_PATH=${CODE_PATH}
       - PROJECT_NAME=${PROJECT_NAME}
     ports:
-      - "8080:8080"
+      - "60000:8080"
 
   coder-mcp:
     container_name: coder-mcp
@@ -21,4 +21,4 @@ services:
       - CODE_PATH=${CODE_PATH}
       - PROJECT_NAME=${PROJECT_NAME}
     ports:
-      - "8081:8080"
+      - "60001:8080"
