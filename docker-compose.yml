@@ -22,3 +22,15 @@ services:
       - PROJECT_NAME=${PROJECT_NAME}
     ports:
       - "60001:8080"
+  
+  researcher-mcp:
+    container_name: researcher-mcp
+    build: ./researcher-mcp
+    volumes:
+      - ${CODE_PATH}:/${PROJECT_NAME}:ro # Mount the code directory as read-only
+    restart: unless-stopped
+    environment:
+      - CODE_PATH=${CODE_PATH}
+      - PROJECT_NAME=${PROJECT_NAME}
+    ports:
+      - "60002:8080"
