@@ -34,3 +34,36 @@ services:
       - PROJECT_NAME=${PROJECT_NAME}
     ports:
       - "60002:8080"
+  searxng:
+    container_name: searxng
+    image: docker.io/searxng/searxng:latest
+    restart: unless-stopped
+    ports:
+      - "60003:8080"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=http://${SEARXNG_HOSTNAME:-localhost}/
+      - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
+      - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+  markitdown-server:
+    build: ./markitdown-server
+    container_name: markitdown-server
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    ports:
+      - "60004:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
