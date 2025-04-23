@@ -92,3 +92,4 @@ async def search(
 # Run the server when this script is executed directly
 if __name__ == "__main__":
     mcp.run()
+

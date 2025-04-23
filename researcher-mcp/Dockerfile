@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.11-alpine
 
 # Install file type detection library
 RUN apk add --no-cache gcc musl-dev linux-headers
