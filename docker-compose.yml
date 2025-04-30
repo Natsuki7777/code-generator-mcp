@@ -15,7 +15,7 @@ services:
     container_name: coder-mcp
     build: ./coder-mcp
     volumes:
-      - ${CODE_PATH}:/${PROJECT_NAME}:ro # Mount the code directory as read-only
+      - ${CODE_PATH}:/${PROJECT_NAME}
     restart: unless-stopped
     environment:
       - CODE_PATH=${CODE_PATH}
@@ -26,14 +26,14 @@ services:
   researcher-mcp:
     container_name: researcher-mcp
     build: ./researcher-mcp
-    volumes:
-      - ${CODE_PATH}:/${PROJECT_NAME}:ro # Mount the code directory as read-only
     restart: unless-stopped
     environment:
-      - CODE_PATH=${CODE_PATH}
-      - PROJECT_NAME=${PROJECT_NAME}
+      # - SEARXNG_BASE_URL をdockser内で使用する場合は、以下のように設定
+      - SEARXNG_BASE_URL=http://searxng:8080
+      - MARKITDOWN_SERVER_URL=http://markitdown-server:8080
     ports:
       - "60002:8080"
+
   searxng:
     container_name: searxng
     image: docker.io/searxng/searxng:latest
@@ -43,7 +43,7 @@ services:
     volumes:
       - ./searxng:/etc/searxng:rw
     environment:
-      - SEARXNG_BASE_URL=http://${SEARXNG_HOSTNAME:-localhost}/
+      - SEARXNG_BASE_URL=http://localhost:8080/
       - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
       - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}
     cap_drop:
