@@ -18,6 +18,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP 
 import uvicorn
+import subprocess
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "file-editor-mcp-server")
 
@@ -28,20 +29,16 @@ mcp = FastMCP(
 )
 
 
-@mcp.tool()
+@mcp.resource("file://{path}")
 def read_file(file_path: str) -> str:
     """
     Read the content of a file.
 
     Args:
-        file_path: Path to the file to read
+        file_path: Path to the file
 
     Returns:
         The content of the file as a string
-
-    Raises:
-        FileNotFoundError: If the file doesn't exist
-        PermissionError: If the file cannot be read due to permissions
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -112,7 +109,7 @@ def insert_file_content(file_path: str, content: str, line_number: int) -> str:
     Args:
         file_path: Path to the file
         content: Content to insert
-        line_number: Line number to insert the content at (1-indexed)
+        line_number: Line number to insert the content 0-indexed
 
     Returns:
         Confirmation message
@@ -124,87 +121,33 @@ def insert_file_content(file_path: str, content: str, line_number: int) -> str:
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
-    # Adjust for 0-indexing
-    line_number -= 1
 
     lines.insert(line_number, content + '\n')
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(lines)
 
-    return f"Successfully inserted content into {file_path} at line {line_number + 1}"
-
-
-@mcp.tool()
-def move_file(source: str, destination: str) -> str:
-    """
-    Move a file or directory from source to destination.
-
-    Args:
-        source: Path to the source file or directory
-        destination: Path to the destination
-
-    Returns:
-        Confirmation message
-
-    Raises:
-        FileNotFoundError: If the source doesn't exist
-        PermissionError: If the operation is not permitted
-    """
-    # ディレクトリが存在しない場合は作成
-    destination_dir = os.path.dirname(destination)
-    if destination_dir and not os.path.exists(destination_dir):
-        os.makedirs(destination_dir)
-
-    shutil.move(source, destination)
-    return f"Successfully moved {source} to {destination}"
-
+    return f"Successfully inserted content into {file_path} at line {line_number}"
 
 @mcp.tool()
-def make_dir(directory: str) -> str:
+def shell_command(command: str) -> str:
     """
-    Create a directory.
+    Execute a shell command.
 
     Args:
-        directory: Path to the directory to create
+        command: The command to execute
 
     Returns:
-        Confirmation message
+        The output of the command
 
     Raises:
-        FileExistsError: If the directory already exists
-        PermissionError: If the directory cannot be created due to permissions
+        subprocess.CalledProcessError: If the command fails
     """
-    os.makedirs(directory, exist_ok=True)
-    return f"Successfully created directory {directory}"
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise subprocess.CalledProcessError(result.returncode, command)
+    return result.stdout
 
-
-@mcp.tool()
-def rm(path: str, recursive: bool = False) -> str:
-    """
-    Remove a file or directory.
-
-    Args:
-        path: Path to the file or directory to remove
-        recursive: If True, remove directories and their contents recursively
-
-    Returns:
-        Confirmation message
-
-    Raises:
-        FileNotFoundError: If the path doesn't exist
-        IsADirectoryError: If the path is a directory and recursive is False
-        PermissionError: If the file cannot be removed due to permissions
-    """
-    if os.path.isdir(path):
-        if recursive:
-            shutil.rmtree(path)
-        else:
-            os.rmdir(path)
-    else:
-        os.remove(path)
-
-    return f"Successfully removed {path}"
 
 
 if __name__ == "__main__":
