@@ -17,14 +17,13 @@ mcp = FastMCP(
 )
 
 
-# Add file contents as a resource with template
-@mcp.resource("file://{path}")
+@mcp.tool()
 def read_file(file_path: str) -> str:
     """
     Read the contents of a file.
 
     Args:
-        path: Path to the file
+        file_path: Path to the file
 
     Returns:
         The text contents of the requested file
