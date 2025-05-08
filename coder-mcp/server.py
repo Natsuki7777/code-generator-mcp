@@ -29,7 +29,7 @@ mcp = FastMCP(
 )
 
 
-@mcp.resource("file://{path}")
+@mcp.tool()
 def read_file(file_path: str) -> str:
     """
     Read the content of a file.
