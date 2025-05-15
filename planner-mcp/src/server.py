@@ -32,26 +32,6 @@ def read_file(file_path: str) -> str:
     return content
 
 
-# @mcp.resource(f"file://{PROJECT_NAME}/README.md")
-# def get_project_readme() -> str:
-#     """
-#     Get the README.md file of the project.
-
-#     This resource provides direct access to the project's README.md file, which typically
-#     contains an overview of the project, setup instructions, and usage documentation.
-
-#     Returns:
-#         The contents of the project's README.md file
-
-#     Note:
-#         If the README.md file doesn't exist, this will return an appropriate error message.
-#     """
-#     # 絶対パスに変換
-#     content = read_single_file_contents(f"{PROJECT_NAME}/README.md")
-#     print(f"file://{PROJECT_NAME}/README.md -> {content}")
-#     return content
-
-
 @mcp.tool()
 def directory_structure(directory: str, max_depth: int = None) -> str:
     """
@@ -100,6 +80,7 @@ def search_codebase(query: str, file_patterns: List[str] = None, case_sensitive:
     )
     return matches
 
+
 @mcp.tool()
 def shell_command(command: str) -> str:
     """
@@ -114,10 +95,28 @@ def shell_command(command: str) -> str:
     Raises:
         subprocess.CalledProcessError: If the command fails
     """
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    result = subprocess.run(command, shell=True,
+                            capture_output=True, text=True)
     if result.returncode != 0:
         raise subprocess.CalledProcessError(result.returncode, command)
     return result.stdout
+
+
+@mcp.tool()
+def code_base_info() -> str:
+    """
+    Get information about the code base.
+    Contained information:
+        - Project name
+        - root directory path
+        - Git status
+        - directory structure (full structure)
+        - Readme files in every directory
+
+    Returns:
+        Information about the server
+    """
+    return "Under construction"
 
 
 if __name__ == "__main__":

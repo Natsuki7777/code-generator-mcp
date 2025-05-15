@@ -157,7 +157,7 @@ wheels = [
 ]
 
 [[package]]
-name = "planer-mcp"
+name = "planner-mcp"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
