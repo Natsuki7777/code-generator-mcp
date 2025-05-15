@@ -32,30 +32,46 @@ def read_file(file_path: str) -> str:
     return content
 
 
+# @mcp.tool()
+# def directory_structure(directory: str, max_depth: int = None) -> str:
+#     """
+#     Get the directory structure as a list of strings.
+#     Args:
+#         directory: The directory path
+#         max_depth: The maximum depth to traverse
+#     Returns:
+#         A string representation of the directory structure
+#     """
+#     target_path = os.path.join("/", directory)
+#     base_path = os.path.join("/", PROJECT_NAME)
+#     # Load .gitignore files
+#     base_gitignore = load_base_gitignore(base_path, target_path)
+#     # Get the directory structure
+#     tree_structure = get_tree_structure(
+#         target_dir=target_path,
+#         current_depth=0,
+#         gitignore_parsers=base_gitignore,
+#         max_depth=max_depth
+#     )
+#     # Convert the list to a string
+#     tree_structure_str = "\n".join(tree_structure)
+#     return tree_structure_str
+
 @mcp.tool()
-def directory_structure(directory: str, max_depth: int = None) -> str:
+def code_base_info() -> str:
     """
-    Get the directory structure as a list of strings.
-    Args:
-        directory: The directory path
-        max_depth: The maximum depth to traverse
+    Get information about the code base.
+    Contained information:
+        - Project name
+        - root directory path
+        - Git status
+        - directory structure (full structure)
+        - Readme files in every directory
+
     Returns:
-        A string representation of the directory structure
+        Information about the server
     """
-    target_path = os.path.join("/", directory)
-    base_path = os.path.join("/", PROJECT_NAME)
-    # Load .gitignore files
-    base_gitignore = load_base_gitignore(base_path, target_path)
-    # Get the directory structure
-    tree_structure = get_tree_structure(
-        target_dir=target_path,
-        current_depth=0,
-        gitignore_parsers=base_gitignore,
-        max_depth=max_depth
-    )
-    # Convert the list to a string
-    tree_structure_str = "\n".join(tree_structure)
-    return tree_structure_str
+    return "Under construction"
 
 
 @mcp.tool()
@@ -100,23 +116,6 @@ def shell_command(command: str) -> str:
     if result.returncode != 0:
         raise subprocess.CalledProcessError(result.returncode, command)
     return result.stdout
-
-
-@mcp.tool()
-def code_base_info() -> str:
-    """
-    Get information about the code base.
-    Contained information:
-        - Project name
-        - root directory path
-        - Git status
-        - directory structure (full structure)
-        - Readme files in every directory
-
-    Returns:
-        Information about the server
-    """
-    return "Under construction"
 
 
 if __name__ == "__main__":
